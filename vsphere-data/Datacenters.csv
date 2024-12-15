@@ -1,0 +1,8 @@
+name,moref,parent_vcenter,description,status
+HQ-A-DC-PROD,datacenter-73108146,vc-26d8de60,PROD Datacenter for HQ-A,Available
+HQ-A-DC-DR,datacenter-8763b7cb,vc-26d8de60,DR Datacenter for HQ-A,Available
+HQ-B-DC-PROD,datacenter-f0d8469f,vc-50a10894,PROD Datacenter for HQ-B,Available
+HQ-B-DC-DR,datacenter-0f823214,vc-50a10894,DR Datacenter for HQ-B,Available
+NA-DC-PROD,datacenter-37dff53e,vc-41f1a2ae,PROD Datacenter for NA,Available
+EU-DC-PROD,datacenter-14f31584,vc-b875cd74,PROD Datacenter for EU,Available
+APAC-DC-PROD,datacenter-d7727b0d,vc-73742397,PROD Datacenter for APAC,Available

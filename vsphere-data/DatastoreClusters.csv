@@ -1,0 +1,40 @@
+name,moref,parent_cluster,total_capacity_gb,free_space_gb,total_datastores,sdrs_enabled,automation_level,space_threshold
+DSC-HQ-A-CL-01-01,dsc-1000,domain-c1000,45056,13819,7,True,Manual,78
+DSC-HQ-A-CL-02-01,dsc-1001,domain-c1001,43008,11192,7,True,Fully Automated,78
+DSC-HQ-A-CL-03-01,dsc-1002,domain-c1002,16384,5185,4,True,Manual,79
+DSC-HQ-A-CL-04-01,dsc-1003,domain-c1003,34816,9384,7,True,Manual,84
+DSC-HQ-A-CL-05-01,dsc-1004,domain-c1004,55296,14486,7,True,Fully Automated,77
+DSC-HQ-A-CL-06-01,dsc-1005,domain-c1005,47104,11831,5,True,Fully Automated,78
+DSC-HQ-A-CL-07-01,dsc-1006,domain-c1006,83968,26649,8,True,Fully Automated,80
+DSC-HQ-A-CL-01-01,dsc-1007,domain-c1007,22528,6307,4,True,Fully Automated,81
+DSC-HQ-A-CL-02-01,dsc-1008,domain-c1008,69632,18471,8,True,Manual,82
+DSC-HQ-A-CL-03-01,dsc-1009,domain-c1009,32768,10454,6,True,Manual,79
+DSC-HQ-A-CL-04-01,dsc-1010,domain-c1010,40960,9652,4,True,Manual,85
+DSC-HQ-A-CL-05-01,dsc-1011,domain-c1011,28672,7716,8,True,Fully Automated,75
+DSC-HQ-A-CL-06-01,dsc-1012,domain-c1012,67584,20202,8,True,Manual,75
+DSC-HQ-A-CL-07-01,dsc-1013,domain-c1013,71680,21680,7,True,Manual,85
+DSC-HQ-B-CL-01-01,dsc-1014,domain-c1014,69632,22962,7,True,Manual,84
+DSC-HQ-B-CL-02-01,dsc-1015,domain-c1015,69632,22561,7,True,Manual,77
+DSC-HQ-B-CL-03-01,dsc-1016,domain-c1016,75776,22369,8,True,Fully Automated,78
+DSC-HQ-B-CL-04-01,dsc-1017,domain-c1017,45056,12776,7,True,Manual,84
+DSC-HQ-B-CL-05-01,dsc-1018,domain-c1018,32768,9049,4,True,Manual,77
+DSC-HQ-B-CL-06-01,dsc-1019,domain-c1019,32768,9997,4,True,Manual,78
+DSC-HQ-B-CL-07-01,dsc-1020,domain-c1020,28672,7688,4,True,Manual,76
+DSC-HQ-B-CL-01-01,dsc-1021,domain-c1021,24576,6363,5,True,Manual,83
+DSC-HQ-B-CL-02-01,dsc-1022,domain-c1022,55296,16544,7,True,Manual,83
+DSC-HQ-B-CL-03-01,dsc-1023,domain-c1023,49152,15370,8,True,Manual,80
+DSC-HQ-B-CL-04-01,dsc-1024,domain-c1024,28672,8810,4,True,Manual,81
+DSC-HQ-B-CL-05-01,dsc-1025,domain-c1025,51200,17168,6,True,Fully Automated,75
+DSC-HQ-B-CL-06-01,dsc-1026,domain-c1026,32768,10952,5,True,Manual,75
+DSC-HQ-B-CL-07-01,dsc-1027,domain-c1027,63488,22578,8,True,Fully Automated,82
+DSC-NA-CL-01-01,dsc-1028,domain-c1028,59392,21741,7,True,Manual,81
+DSC-NA-CL-02-01,dsc-1029,domain-c1029,69632,19782,6,True,Manual,83
+DSC-NA-CL-03-01,dsc-1030,domain-c1030,83968,23148,7,True,Manual,76
+DSC-NA-CL-04-01,dsc-1031,domain-c1031,28672,7940,4,True,Manual,75
+DSC-EU-CL-01-01,dsc-1032,domain-c1032,16384,4949,4,True,Manual,76
+DSC-EU-CL-02-01,dsc-1033,domain-c1033,49152,15429,6,True,Manual,85
+DSC-EU-CL-03-01,dsc-1034,domain-c1034,83968,24875,8,True,Manual,82
+DSC-EU-CL-04-01,dsc-1035,domain-c1035,40960,12725,4,True,Fully Automated,83
+DSC-APAC-CL-01-01,dsc-1036,domain-c1036,71680,20764,7,True,Manual,80
+DSC-APAC-CL-02-01,dsc-1037,domain-c1037,53248,18652,7,True,Fully Automated,75
+DSC-APAC-CL-03-01,dsc-1038,domain-c1038,36864,10167,6,True,Fully Automated,77

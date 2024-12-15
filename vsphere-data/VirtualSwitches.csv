@@ -1,0 +1,6 @@
+name,moref,type,uplinks,port_groups,mtu,load_balancing,notes
+HQ-A-DVS-01,dvs-1000,Distributed,4,0,9000,Route based on physical NIC load,Main distributed switch for HQ-A
+HQ-B-DVS-01,dvs-1001,Distributed,4,0,9000,Route based on physical NIC load,Main distributed switch for HQ-B
+NA-DVS-01,dvs-1002,Distributed,4,0,9000,Route based on physical NIC load,Main distributed switch for NA
+EU-DVS-01,dvs-1003,Distributed,4,0,9000,Route based on physical NIC load,Main distributed switch for EU
+APAC-DVS-01,dvs-1004,Distributed,4,0,9000,Route based on physical NIC load,Main distributed switch for APAC
