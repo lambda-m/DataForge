@@ -7,11 +7,13 @@ from typing import List, Dict
 import itertools
 import os
 import shutil
+from urllib.parse import urlparse
 
 class VSphereEnvironmentGenerator:
     def __init__(self):
         # Core infrastructure components
         self.vcenters: List[Dict] = []
+        self.datacenters: List[Dict] = []
         self.clusters: List[Dict] = []
         self.hosts: List[Dict] = []
         self.vms: List[Dict] = []
@@ -76,9 +78,7 @@ class VSphereEnvironmentGenerator:
                 'moref': f"vc-{uuid.uuid4().hex[:8]}",
                 'version': "7.0.3g",
                 'build': "20150588",
-                'datacenters': 2 if region.startswith('HQ') else 1,
-                'clusters': 30 if region.startswith('HQ') else 7,
-                'hosts': 150 if region.startswith('HQ') else 70,
+                'url': f"https://{region.lower()}-vc-01.vsphere.local",
                 'description': f"{region} vCenter, deployed 2021"
             }
             self.vcenters.append(vcenter)
@@ -86,15 +86,19 @@ class VSphereEnvironmentGenerator:
     def generate_clusters(self):
         print("Generating Clusters...")
         cluster_id = 1000
-        for vcenter in self.vcenters:
-            clusters_count = vcenter['clusters']
+        for datacenter in self.datacenters:
+            vcenter = next(vc for vc in self.vcenters if vc['moref'] == datacenter['parent_vcenter'])
             region = self.get_full_region_name(vcenter['name'])
             
-            for i in range(clusters_count):
+            # Determine number of clusters based on datacenter purpose
+            num_clusters = 30 if region.startswith('HQ') else 7
+            
+            for i in range(num_clusters):
                 cluster = {
                     'name': f"{region}-CL-{i+1:02d}",
                     'moref': f"domain-c{cluster_id}",
-                    'parent_vcenter': vcenter['moref'],
+                    'parent_datacenter': datacenter['moref'],
+                    'parent_vcenter': datacenter['parent_vcenter'],
                     'total_hosts': random.randint(4, 12),
                     'total_vms': random.randint(40, 120),
                     'total_cpu_cores': 0,
@@ -110,11 +114,13 @@ class VSphereEnvironmentGenerator:
         print("Generating ESXi Hosts...")
         host_id = 1000
         for cluster in self.clusters:
+            datacenter = next(dc for dc in self.datacenters if dc['moref'] == cluster['parent_datacenter'])
             for i in range(cluster['total_hosts']):
                 host = {
                     'name': f"{cluster['name'].replace('CL', 'ESX')}-{i+1:02d}",
                     'moref': f"host-{host_id}",
                     'parent_cluster': cluster['moref'],
+                    'parent_datacenter': datacenter['moref'],
                     'vcenter_moref': cluster['parent_vcenter'],
                     'cpu_cores': 48,
                     'memory_gb': 384,
@@ -129,10 +135,6 @@ class VSphereEnvironmentGenerator:
                 self.hosts.append(host)
                 self.generate_host_nics(host)
                 host_id += 1
-
-            # Update cluster totals
-            cluster['total_cpu_cores'] = sum(h['cpu_cores'] for h in self.hosts if h['parent_cluster'] == cluster['moref'])
-            cluster['total_memory'] = sum(h['memory_gb'] for h in self.hosts if h['parent_cluster'] == cluster['moref'])
 
     def generate_datastores(self):
         print("Generating Datastores...")
@@ -327,8 +329,9 @@ class VSphereEnvironmentGenerator:
     def export_to_csv(self):
         print(f"Exporting data to {self.output_dir}/...")
         csv_files = {
-            'vCenters.csv': (self.vcenters, ['name', 'moref', 'version', 'build', 'datacenters', 'clusters', 'hosts', 'description']),
-            'Clusters.csv': (self.clusters, ['name', 'moref', 'parent_vcenter', 'total_hosts', 'total_vms', 'total_cpu_cores', 'total_memory', 'ha_enabled', 'drs_enabled', 'notes']),
+            'vCenters.csv': (self.vcenters, ['name', 'moref', 'version', 'build', 'url', 'description']),
+            'Datacenters.csv': (self.datacenters, ['name', 'moref', 'parent_vcenter', 'description', 'status']),
+            'Clusters.csv': (self.clusters, ['name', 'moref', 'parent_datacenter', 'parent_vcenter', 'total_hosts', 'total_vms', 'total_cpu_cores', 'total_memory', 'ha_enabled', 'drs_enabled', 'notes']),
             'ESXiHosts.csv': (self.hosts, ['name', 'moref', 'parent_cluster', 'vcenter_moref', 'cpu_cores', 'memory_gb', 'nic_count', 'datastores_count', 'status', 'model', 'vendor', 'serial', 'uptime']),
             'VirtualMachines.csv': (self.vms, ['name', 'moref', 'parent_host', 'cluster_moref', 'vcenter_moref', 'guest_os', 'vm_version', 'cpu_count', 'memory_gb', 'disk_count', 'nic_count', 'ip_addresses', 'power_state', 'created_date', 'notes']),
             'VMGuestDetails.csv': (self.vm_guest_details, ['vm_moref', 'guest_os_full', 'ip_addresses', 'hostname', 'uptime', 'tools_status', 'tools_version', 'guest_state', 'cpu_usage', 'memory_usage', 'notes']),
@@ -352,6 +355,7 @@ class VSphereEnvironmentGenerator:
     def generate_all(self):
         print("Starting vSphere environment data generation...")
         self.generate_vcenters()
+        self.generate_datacenters()
         self.generate_clusters()
         self.generate_hosts()
         self.generate_datastores()
@@ -362,6 +366,82 @@ class VSphereEnvironmentGenerator:
         self.generate_nsx_tags()
         self.export_to_csv()
         print("Data generation complete!")
+
+    def generate_datacenters(self):
+        print("Generating Datacenters...")
+        for vcenter in self.vcenters:
+            region = self.get_full_region_name(vcenter['name'])
+            # HQ regions get 2 datacenters, others get 1
+            num_dcs = 2 if region.startswith('HQ') else 1
+            
+            for i in range(num_dcs):
+                purpose = 'PROD' if i == 0 else 'DR'
+                datacenter = {
+                    'name': f"{region}-DC-{purpose}",
+                    'moref': f"datacenter-{uuid.uuid4().hex[:8]}",
+                    'parent_vcenter': vcenter['moref'],
+                    'description': f"{purpose} Datacenter for {region}",
+                    'status': 'Available'
+                }
+                self.datacenters.append(datacenter)
+
+def generate_vcenter_url(vcenter_name):
+    # Convert name to lowercase and remove spaces for hostname
+    hostname = vcenter_name.lower().replace(' ', '')
+    # Add realistic domain and format as proper vCenter URL
+    return f"https://{hostname}.vsphere.local"
+
+def generate_datacenters(num_datacenters, vcenter_ids):
+    datacenters = []
+    dc_names = [f"Datacenter-{i+1}" for i in range(num_datacenters)]
+    
+    for vcenter_id in vcenter_ids:
+        # Each vCenter gets 1-3 datacenters
+        num_dcs = random.randint(1, 3)
+        for i in range(num_dcs):
+            dc_id = str(uuid.uuid4())
+            name = f"DC-{random.choice(['PROD', 'DEV', 'TEST', 'DR'])}-{random.randint(1,99)}"
+            description = f"Virtual Datacenter for {name}"
+            datacenters.append([name, dc_id, vcenter_id, description])
+    
+    return datacenters
+
+def generate_vcenters(num_vcenters):
+    vcenters = []
+    versions = ['7.0.3', '8.0.0', '8.0.1']
+    builds = ['20150588', '20519528', '20802592']
+    
+    for i in range(num_vcenters):
+        vcenter_id = str(uuid.uuid4())
+        name = f"vcenter-{random.randint(1,999):03d}"
+        url = generate_vcenter_url(name)
+        version = random.choice(versions)
+        build = random.choice(builds)
+        vcenters.append([name, vcenter_id, url, version, build])
+    
+    return vcenters
+
+def generate_vsphere_data():
+    # ... existing code ...
+    
+    # Generate vCenters first
+    vcenters = generate_vcenters(num_vcenters)
+    vcenter_ids = [vc[1] for vc in vcenters]
+    
+    # Generate datacenters before other objects
+    datacenters = generate_datacenters(num_datacenters, vcenter_ids)
+    
+    # Write the new datacenter data
+    write_csv('vsphere-data/Datacenters.csv', 
+             ['Name', 'ID', 'vCenterID', 'Description'], 
+             datacenters)
+    
+    # Modify the vCenter CSV writing to match new structure
+    write_csv('vsphere-data/vCenters.csv',
+             ['Name', 'ID', 'URL', 'Version', 'Build'],
+             vcenters)
+    
+    # ... rest of your existing code ...
 
 if __name__ == "__main__":
     generator = VSphereEnvironmentGenerator()
