@@ -1,0 +1,6 @@
+name,moref,version,build,datacenters,clusters,hosts,description
+HQ-A-VC-01,vc-279f6575,7.0.3g,20150588,2,30,150,"HQ-A vCenter, deployed 2021"
+HQ-B-VC-01,vc-57b08b1a,7.0.3g,20150588,2,30,150,"HQ-B vCenter, deployed 2021"
+NA-VC-01,vc-8b4e62a3,7.0.3g,20150588,1,7,70,"NA vCenter, deployed 2021"
+EU-VC-01,vc-834da51e,7.0.3g,20150588,1,7,70,"EU vCenter, deployed 2021"
+APAC-VC-01,vc-3d4f0cc4,7.0.3g,20150588,1,7,70,"APAC vCenter, deployed 2021"

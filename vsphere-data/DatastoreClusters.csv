@@ -1,0 +1,82 @@
+name,moref,parent_cluster,total_capacity_gb,free_space_gb,total_datastores,sdrs_enabled,automation_level,space_threshold
+DSC-HQ-A-CL-01-01,dsc-1000,domain-c1000,30720,8258,4,True,Fully Automated,79
+DSC-HQ-A-CL-02-01,dsc-1001,domain-c1001,40960,12607,6,True,Fully Automated,81
+DSC-HQ-A-CL-03-01,dsc-1002,domain-c1002,34816,9871,5,True,Manual,78
+DSC-HQ-A-CL-04-01,dsc-1003,domain-c1003,65536,20409,7,True,Fully Automated,78
+DSC-HQ-A-CL-05-01,dsc-1004,domain-c1004,30720,10120,4,True,Manual,83
+DSC-HQ-A-CL-06-01,dsc-1005,domain-c1005,18432,4961,5,True,Manual,82
+DSC-HQ-A-CL-07-01,dsc-1006,domain-c1006,34816,11051,5,True,Fully Automated,75
+DSC-HQ-A-CL-08-01,dsc-1007,domain-c1007,26624,8874,4,True,Fully Automated,75
+DSC-HQ-A-CL-09-01,dsc-1008,domain-c1008,36864,11481,5,True,Fully Automated,84
+DSC-HQ-A-CL-10-01,dsc-1009,domain-c1009,55296,18186,6,True,Manual,77
+DSC-HQ-A-CL-11-01,dsc-1010,domain-c1010,49152,14483,6,True,Manual,83
+DSC-HQ-A-CL-12-01,dsc-1011,domain-c1011,59392,16364,6,True,Fully Automated,77
+DSC-HQ-A-CL-13-01,dsc-1012,domain-c1012,30720,8451,4,True,Manual,79
+DSC-HQ-A-CL-14-01,dsc-1013,domain-c1013,32768,10690,4,True,Fully Automated,83
+DSC-HQ-A-CL-15-01,dsc-1014,domain-c1014,28672,8180,5,True,Fully Automated,80
+DSC-HQ-A-CL-16-01,dsc-1015,domain-c1015,77824,22121,7,True,Fully Automated,77
+DSC-HQ-A-CL-17-01,dsc-1016,domain-c1016,69632,21089,8,True,Fully Automated,76
+DSC-HQ-A-CL-18-01,dsc-1017,domain-c1017,36864,10254,7,True,Fully Automated,76
+DSC-HQ-A-CL-19-01,dsc-1018,domain-c1018,55296,16626,7,True,Fully Automated,82
+DSC-HQ-A-CL-20-01,dsc-1019,domain-c1019,49152,14858,4,True,Manual,84
+DSC-HQ-A-CL-21-01,dsc-1020,domain-c1020,32768,7830,5,True,Fully Automated,81
+DSC-HQ-A-CL-22-01,dsc-1021,domain-c1021,43008,12387,6,True,Fully Automated,85
+DSC-HQ-A-CL-23-01,dsc-1022,domain-c1022,55296,13575,7,True,Manual,80
+DSC-HQ-A-CL-24-01,dsc-1023,domain-c1023,38912,12670,6,True,Manual,75
+DSC-HQ-A-CL-25-01,dsc-1024,domain-c1024,59392,19376,7,True,Manual,77
+DSC-HQ-A-CL-26-01,dsc-1025,domain-c1025,61440,19867,6,True,Manual,79
+DSC-HQ-A-CL-27-01,dsc-1026,domain-c1026,51200,12832,6,True,Fully Automated,79
+DSC-HQ-A-CL-28-01,dsc-1027,domain-c1027,40960,12707,5,True,Manual,84
+DSC-HQ-A-CL-29-01,dsc-1028,domain-c1028,43008,14443,5,True,Manual,82
+DSC-HQ-A-CL-30-01,dsc-1029,domain-c1029,45056,14659,6,True,Fully Automated,80
+DSC-HQ-B-CL-01-01,dsc-1030,domain-c1030,34816,10305,6,True,Fully Automated,83
+DSC-HQ-B-CL-02-01,dsc-1031,domain-c1031,20480,6548,4,True,Manual,76
+DSC-HQ-B-CL-03-01,dsc-1032,domain-c1032,36864,12134,6,True,Manual,78
+DSC-HQ-B-CL-04-01,dsc-1033,domain-c1033,18432,6072,4,True,Fully Automated,80
+DSC-HQ-B-CL-05-01,dsc-1034,domain-c1034,36864,10668,5,True,Manual,83
+DSC-HQ-B-CL-06-01,dsc-1035,domain-c1035,16384,5632,4,True,Manual,76
+DSC-HQ-B-CL-07-01,dsc-1036,domain-c1036,45056,15083,5,True,Fully Automated,81
+DSC-HQ-B-CL-08-01,dsc-1037,domain-c1037,22528,6151,5,True,Manual,85
+DSC-HQ-B-CL-09-01,dsc-1038,domain-c1038,28672,9138,5,True,Manual,80
+DSC-HQ-B-CL-10-01,dsc-1039,domain-c1039,28672,10636,4,True,Fully Automated,78
+DSC-HQ-B-CL-11-01,dsc-1040,domain-c1040,71680,22695,7,True,Manual,79
+DSC-HQ-B-CL-12-01,dsc-1041,domain-c1041,47104,13070,6,True,Manual,75
+DSC-HQ-B-CL-13-01,dsc-1042,domain-c1042,30720,9339,6,True,Fully Automated,83
+DSC-HQ-B-CL-14-01,dsc-1043,domain-c1043,18432,6134,5,True,Manual,84
+DSC-HQ-B-CL-15-01,dsc-1044,domain-c1044,34816,8881,6,True,Manual,81
+DSC-HQ-B-CL-16-01,dsc-1045,domain-c1045,61440,18108,7,True,Fully Automated,76
+DSC-HQ-B-CL-17-01,dsc-1046,domain-c1046,43008,12514,4,True,Fully Automated,82
+DSC-HQ-B-CL-18-01,dsc-1047,domain-c1047,55296,15371,6,True,Fully Automated,85
+DSC-HQ-B-CL-19-01,dsc-1048,domain-c1048,47104,16566,5,True,Fully Automated,81
+DSC-HQ-B-CL-20-01,dsc-1049,domain-c1049,59392,19615,6,True,Fully Automated,81
+DSC-HQ-B-CL-21-01,dsc-1050,domain-c1050,28672,8979,4,True,Manual,84
+DSC-HQ-B-CL-22-01,dsc-1051,domain-c1051,40960,12085,7,True,Fully Automated,79
+DSC-HQ-B-CL-23-01,dsc-1052,domain-c1052,69632,20572,8,True,Fully Automated,84
+DSC-HQ-B-CL-24-01,dsc-1053,domain-c1053,43008,12358,4,True,Manual,79
+DSC-HQ-B-CL-25-01,dsc-1054,domain-c1054,55296,18524,7,True,Fully Automated,82
+DSC-HQ-B-CL-26-01,dsc-1055,domain-c1055,43008,11939,7,True,Fully Automated,85
+DSC-HQ-B-CL-27-01,dsc-1056,domain-c1056,57344,17984,7,True,Manual,83
+DSC-HQ-B-CL-28-01,dsc-1057,domain-c1057,34816,8819,5,True,Manual,80
+DSC-HQ-B-CL-29-01,dsc-1058,domain-c1058,18432,5264,4,True,Fully Automated,83
+DSC-HQ-B-CL-30-01,dsc-1059,domain-c1059,53248,15784,5,True,Fully Automated,75
+DSC-NA-CL-01-01,dsc-1060,domain-c1060,28672,8634,5,True,Manual,82
+DSC-NA-CL-02-01,dsc-1061,domain-c1061,34816,9261,4,True,Fully Automated,76
+DSC-NA-CL-03-01,dsc-1062,domain-c1062,57344,18665,5,True,Fully Automated,82
+DSC-NA-CL-04-01,dsc-1063,domain-c1063,40960,10533,7,True,Fully Automated,82
+DSC-NA-CL-05-01,dsc-1064,domain-c1064,40960,13761,4,True,Fully Automated,75
+DSC-NA-CL-06-01,dsc-1065,domain-c1065,34816,10234,7,True,Fully Automated,82
+DSC-NA-CL-07-01,dsc-1066,domain-c1066,57344,17159,7,True,Manual,84
+DSC-EU-CL-01-01,dsc-1067,domain-c1067,40960,13330,5,True,Manual,85
+DSC-EU-CL-02-01,dsc-1068,domain-c1068,30720,7687,4,True,Manual,84
+DSC-EU-CL-03-01,dsc-1069,domain-c1069,65536,19869,6,True,Fully Automated,85
+DSC-EU-CL-04-01,dsc-1070,domain-c1070,22528,6743,5,True,Fully Automated,76
+DSC-EU-CL-05-01,dsc-1071,domain-c1071,73728,19577,7,True,Manual,83
+DSC-EU-CL-06-01,dsc-1072,domain-c1072,34816,11145,4,True,Manual,76
+DSC-EU-CL-07-01,dsc-1073,domain-c1073,38912,12273,8,True,Manual,83
+DSC-APAC-CL-01-01,dsc-1074,domain-c1074,38912,12280,6,True,Manual,77
+DSC-APAC-CL-02-01,dsc-1075,domain-c1075,69632,19810,7,True,Fully Automated,77
+DSC-APAC-CL-03-01,dsc-1076,domain-c1076,34816,10943,5,True,Fully Automated,83
+DSC-APAC-CL-04-01,dsc-1077,domain-c1077,43008,13697,6,True,Manual,76
+DSC-APAC-CL-05-01,dsc-1078,domain-c1078,28672,7780,4,True,Fully Automated,84
+DSC-APAC-CL-06-01,dsc-1079,domain-c1079,55296,16961,7,True,Fully Automated,76
+DSC-APAC-CL-07-01,dsc-1080,domain-c1080,38912,14227,6,True,Fully Automated,78
