@@ -2,6 +2,73 @@
 
 DataForge is a tool for generating data for testing and development purposes. It generates a set of CSV files which describe an imaginary but realistic dataset representing a VMware vSphere environment at a typical enterprise scale.
 
+## Configuration
+
+The environment generation can be customized through the `config/vsphere_config.yaml` file:
+
+### Scale Options
+Configure the overall size of the generated environment:
+```yaml
+scale:
+  size: "large"  # Can be small, medium, large
+  size_definitions:
+    small:
+      total_vms: 1000
+      avg_vms_per_host: 20
+      max_hosts_per_cluster: 12
+    medium:
+      total_vms: 5000
+      avg_vms_per_host: 25
+      max_hosts_per_cluster: 24
+    large:
+      total_vms: 20000
+      avg_vms_per_host: 30
+      max_hosts_per_cluster: 32
+```
+
+### Distribution Patterns
+Configure how objects are distributed:
+```yaml
+distributions:
+  cluster_sizes:
+    large_site:  # For HQ regions
+      tiny: {hosts: "4-8", weight: 0.1}    # Small dev/test clusters
+      small: {hosts: "8-16", weight: 0.3}   # Standard workload clusters
+      medium: {hosts: "16-24", weight: 0.4} # Main production clusters
+      large: {hosts: "24-32", weight: 0.2}  # Large production clusters
+```
+
+### Regional Configuration
+Define your vSphere regions:
+```yaml
+regions:
+  HQ-A:
+    weight: 0.3  # Proportion of total environment
+    network_prefix: "10.10"
+    datacenters: 2  # PROD and DR
+    cluster_distribution: "large_site"
+```
+
+### Hardware and Software Options
+Configure available hardware models and software versions:
+```yaml
+hosts:
+  models:
+    - name: "PowerEdge R750"
+      weight: 0.6
+      cpu_cores: 48
+      memory_gb: 384
+
+virtual_machines:
+  os_types:
+    - name: "Windows Server 2019 Standard"
+      weight: 0.4
+      typical_memory_gb: [8, 16, 32]
+      typical_cpu_cores: [2, 4, 8]
+```
+
+See `config/vsphere_config.yaml` for the complete configuration options and examples.
+
 ## Generated Data Structure
 
 The tool generates the following CSV files in the `vsphere-data` directory, organized in a hierarchical structure:

@@ -1,6 +1,6 @@
 name,moref,version,build,url,description
-HQ-A-VC-01,vc-4f0b1761,7.0.3g,20150588,https://hq-a-vc-01.vsphere.local,"HQ-A vCenter, deployed 2021"
-HQ-B-VC-01,vc-df1e855e,7.0.3g,20150588,https://hq-b-vc-01.vsphere.local,"HQ-B vCenter, deployed 2021"
-NA-VC-01,vc-a28753c5,7.0.3g,20150588,https://na-vc-01.vsphere.local,"NA vCenter, deployed 2021"
-EU-VC-01,vc-37b43ff5,7.0.3g,20150588,https://eu-vc-01.vsphere.local,"EU vCenter, deployed 2021"
-APAC-VC-01,vc-a147eb26,7.0.3g,20150588,https://apac-vc-01.vsphere.local,"APAC vCenter, deployed 2021"
+HQ-A-VC-01,vc-26d8de60,7.0.3g,20150588,https://hq-a-vc-01.vsphere.local,"HQ-A vCenter, deployed 2021"
+HQ-B-VC-01,vc-50a10894,7.0.3g,20150588,https://hq-b-vc-01.vsphere.local,"HQ-B vCenter, deployed 2021"
+NA-VC-01,vc-41f1a2ae,7.0.3g,20150588,https://na-vc-01.vsphere.local,"NA vCenter, deployed 2021"
+EU-VC-01,vc-b875cd74,7.0.3g,20150588,https://eu-vc-01.vsphere.local,"EU vCenter, deployed 2021"
+APAC-VC-01,vc-73742397,7.0.3g,20150588,https://apac-vc-01.vsphere.local,"APAC vCenter, deployed 2021"

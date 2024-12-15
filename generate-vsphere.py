@@ -8,10 +8,17 @@ import itertools
 import os
 import shutil
 from urllib.parse import urlparse
+import yaml
+from pathlib import Path
+import math
+import sys
 
 class VSphereEnvironmentGenerator:
-    def __init__(self):
-        # Core infrastructure components
+    def __init__(self, config_path="config/vsphere_config.yaml"):
+        # Load configuration
+        self.config = self.load_config(config_path)
+        
+        # Initialize components
         self.vcenters: List[Dict] = []
         self.datacenters: List[Dict] = []
         self.clusters: List[Dict] = []
@@ -52,6 +59,54 @@ class VSphereEnvironmentGenerator:
             shutil.rmtree(self.output_dir)
         os.makedirs(self.output_dir)
 
+    def load_config(self, config_path):
+        """Load and validate configuration"""
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"Configuration file not found: {config_path}")
+        
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        # Validate required configuration sections
+        required_sections = ['scale', 'regions', 'vcenter', 'hosts', 'virtual_machines', 'storage']
+        for section in required_sections:
+            if section not in config:
+                raise ValueError(f"Missing required configuration section: {section}")
+        
+        # Get size configuration
+        size = config['scale']['size']
+        if size not in config['scale']['size_definitions']:
+            raise ValueError(f"Invalid size '{size}'. Must be one of: {list(config['scale']['size_definitions'].keys())}")
+        
+        size_config = config['scale']['size_definitions'][size]
+        self.calculate_derived_values(config, size_config)
+        return config
+
+    def calculate_derived_values(self, config, size_config):
+        """Calculate additional configuration values based on scale"""
+        try:
+            total_vms = size_config['total_vms']
+            avg_vms_per_host = size_config['avg_vms_per_host']
+            max_hosts_per_cluster = size_config['max_hosts_per_cluster']
+
+            # Calculate total hosts needed
+            total_hosts = math.ceil(total_vms / avg_vms_per_host)
+            
+            # Validate region weights sum to 1.0
+            region_weights = {r: config['regions'][r]['weight'] for r in config['regions']}
+            if not 0.99 <= sum(region_weights.values()) <= 1.01:
+                raise ValueError("Region weights must sum to 1.0")
+            
+            # Calculate hosts and clusters per region
+            for region in config['regions']:
+                region_hosts = math.ceil(total_hosts * region_weights[region])
+                region_clusters = math.ceil(region_hosts / max_hosts_per_cluster)
+                config['regions'][region]['calculated_hosts'] = region_hosts
+                config['regions'][region]['calculated_clusters'] = region_clusters
+            
+        except KeyError as e:
+            raise ValueError(f"Missing required configuration value: {e}")
+
     def generate_moref(self, prefix: str, num: int) -> str:
         return f"{prefix}-{num:06d}"
 
@@ -83,6 +138,18 @@ class VSphereEnvironmentGenerator:
             }
             self.vcenters.append(vcenter)
 
+    def parse_range(self, range_str):
+        """Convert range string like '4-8' to min and max values"""
+        min_val, max_val = map(int, range_str.split('-'))
+        return min_val, max_val
+
+    def get_random_from_distribution(self, distribution):
+        """Pick a random item based on weights"""
+        items = list(distribution.items())
+        weights = [item[1]['weight'] for item in items]
+        chosen = random.choices(items, weights=weights)[0]
+        return chosen[0], chosen[1]
+
     def generate_clusters(self):
         print("Generating Clusters...")
         cluster_id = 1000
@@ -90,22 +157,34 @@ class VSphereEnvironmentGenerator:
             vcenter = next(vc for vc in self.vcenters if vc['moref'] == datacenter['parent_vcenter'])
             region = self.get_full_region_name(vcenter['name'])
             
-            # Determine number of clusters based on datacenter purpose
-            num_clusters = 30 if region.startswith('HQ') else 7
+            # Get region's cluster distribution pattern
+            region_config = self.config['regions'][region]
+            distribution = self.config['scale']['distributions']['cluster_sizes'][region_config['cluster_distribution']]
+            
+            # Calculate number of clusters based on region's calculated value
+            num_clusters = region_config['calculated_clusters']
             
             for i in range(num_clusters):
+                # Pick a random cluster size based on distribution
+                size_category, size_config = self.get_random_from_distribution(distribution)
+                min_hosts, max_hosts = self.parse_range(size_config['hosts'])
+                
+                total_hosts = random.randint(min_hosts, max_hosts)
+                
+                # Generate cluster with randomized but distributed size
                 cluster = {
                     'name': f"{region}-CL-{i+1:02d}",
                     'moref': f"domain-c{cluster_id}",
                     'parent_datacenter': datacenter['moref'],
                     'parent_vcenter': datacenter['parent_vcenter'],
-                    'total_hosts': random.randint(4, 12),
-                    'total_vms': random.randint(40, 120),
-                    'total_cpu_cores': 0,
-                    'total_memory': 0,
+                    'total_hosts': total_hosts,
+                    'total_vms': 0,  # Will be updated after VM generation
+                    'total_cpu_cores': 0,  # Will be updated after host generation
+                    'total_memory': 0,  # Will be updated after host generation
+                    'size_category': size_category,
                     'ha_enabled': True,
                     'drs_enabled': True,
-                    'notes': f"Cluster for {region} workloads"
+                    'notes': f"{size_category.capitalize()} cluster for {region} workloads"
                 }
                 self.clusters.append(cluster)
                 cluster_id += 1
@@ -113,21 +192,33 @@ class VSphereEnvironmentGenerator:
     def generate_hosts(self):
         print("Generating ESXi Hosts...")
         host_id = 1000
+        vm_density = self.config['scale']['distributions']['vm_density']
+        
         for cluster in self.clusters:
-            datacenter = next(dc for dc in self.datacenters if dc['moref'] == cluster['parent_datacenter'])
+            # Pick VM density based on cluster size
+            density_category, density_config = self.get_random_from_distribution(vm_density)
+            min_vms, max_vms = self.parse_range(density_config['range'])
+            
+            # Get random host model from config
+            host_models = self.config['hosts']['models']
+            model = random.choices(
+                [m for m in host_models],
+                weights=[m['weight'] for m in host_models]
+            )[0]
+            
             for i in range(cluster['total_hosts']):
                 host = {
                     'name': f"{cluster['name'].replace('CL', 'ESX')}-{i+1:02d}",
                     'moref': f"host-{host_id}",
                     'parent_cluster': cluster['moref'],
-                    'parent_datacenter': datacenter['moref'],
                     'vcenter_moref': cluster['parent_vcenter'],
-                    'cpu_cores': 48,
-                    'memory_gb': 384,
+                    'vm_capacity': random.randint(min_vms, max_vms),
+                    'cpu_cores': model['cpu_cores'],
+                    'memory_gb': model['memory_gb'],
                     'nic_count': 8,
-                    'datastores_count': 12,
+                    'datastores_count': random.randint(8, 16),
                     'status': random.choice(['Connected'] * 95 + ['Maintenance'] * 5),
-                    'model': random.choice(['PowerEdge R750', 'PowerEdge R840']),
+                    'model': model['name'],
                     'vendor': 'Dell',
                     'serial': f"DELL{random.randint(100000,999999)}",
                     'uptime': random.uniform(100, 400)
@@ -136,14 +227,29 @@ class VSphereEnvironmentGenerator:
                 self.generate_host_nics(host)
                 host_id += 1
 
+        # After generating all hosts, update cluster totals
+        for cluster in self.clusters:
+            cluster_hosts = [h for h in self.hosts if h['parent_cluster'] == cluster['moref']]
+            cluster['total_cpu_cores'] = sum(h['cpu_cores'] for h in cluster_hosts)
+            cluster['total_memory'] = sum(h['memory_gb'] for h in cluster_hosts)
+
     def generate_datastores(self):
         print("Generating Datastores...")
         datastore_id = 1000
+        storage_config = self.config['storage']
+        
         for cluster in self.clusters:
             for i in range(random.randint(4, 8)):
-                capacity = random.choice([2048, 4096, 8192, 16384])
+                capacity = random.choice(storage_config['datastore_sizes_gb'])
                 free_space = int(capacity * random.uniform(0.2, 0.4))
                 provisioned = int(capacity * random.uniform(0.7, 0.9))
+                
+                # Select storage array based on weights
+                array = random.choices(
+                    storage_config['arrays'],
+                    weights=[a['weight'] for a in storage_config['arrays']]
+                )[0]
+                model = random.choice(array['models'])
                 
                 datastore = {
                     'name': f"{cluster['name'].replace('CL', 'DS')}-{i+1:02d}",
@@ -154,8 +260,8 @@ class VSphereEnvironmentGenerator:
                     'free_space_gb': free_space,
                     'provisioned_space_gb': provisioned,
                     'datastore_cluster': f"DSC-{cluster['name']}-01",
-                    'storage_array': random.choice(['PowerStore', 'Unity XT']),
-                    'storage_model': random.choice(['PowerStore T1000', 'Unity XT 880']),
+                    'storage_array': array['name'],
+                    'storage_model': f"{array['name']} {model}",
                     'storage_serial': f"PS{random.randint(10000,99999)}"
                 }
                 self.datastores.append(datastore)
@@ -202,49 +308,73 @@ class VSphereEnvironmentGenerator:
     def generate_vms(self):
         print("Generating Virtual Machines...")
         vm_id = 1000
-        for cluster in self.clusters:
-            vcenter = next(vc for vc in self.vcenters if vc['moref'] == cluster['parent_vcenter'])
+        os_types = self.config['virtual_machines']['os_types']
+        purposes = self.config['virtual_machines']['purposes']
+        
+        for host in self.hosts:
+            # Get network prefix from host's region
+            vcenter = next(vc for vc in self.vcenters if vc['moref'] == host['vcenter_moref'])
             region = self.get_full_region_name(vcenter['name'])
-            network_prefix = self.REGIONS[region]['network_prefix']
+            network_prefix = self.config['regions'][region]['network_prefix']
             
-            for i in range(cluster['total_vms']):
-                purpose = random.choice(self.VM_PURPOSES)
-                os_type = random.choices(list(self.OS_TYPES.keys()), 
-                                      list(self.OS_TYPES.values()))[0]
+            for i in range(host['vm_capacity']):
+                # Select OS type based on weights
+                os_type = random.choices(
+                    [os for os in os_types],
+                    weights=[os['weight'] for os in os_types]
+                )[0]
+                
+                # Select purpose based on weights
+                purpose = random.choices(
+                    [p['name'] for p in purposes],
+                    weights=[p['weight'] for p in purposes]
+                )[0]
+                
+                # Select memory and CPU from typical ranges for this OS
+                memory_gb = random.choice(os_type['typical_memory_gb'])
+                cpu_cores = random.choice(os_type['typical_cpu_cores'])
+                
+                # Generate IP address for VM
+                ip_address = f"{network_prefix}.{random.randint(1,254)}.{random.randint(1,254)}"
                 
                 vm = {
-                    'name': f"{region}-VM-{purpose}-{vm_id:04d}",
+                    'name': f"{host['name'].replace('ESX', 'VM')}-{vm_id:04d}",
                     'moref': f"vm-{vm_id}",
-                    'parent_host': random.choice([h['moref'] for h in self.hosts if h['parent_cluster'] == cluster['moref']]),
-                    'cluster_moref': cluster['moref'],
-                    'vcenter_moref': cluster['parent_vcenter'],
-                    'guest_os': os_type,
+                    'parent_host': host['moref'],
+                    'cluster_moref': host['parent_cluster'],
+                    'vcenter_moref': host['vcenter_moref'],
+                    'guest_os': os_type['name'],
                     'vm_version': f"v{random.randint(14,19)}",
-                    'cpu_count': random.choice([2,4,8,16]),
-                    'memory_gb': random.choice([4,8,16,32,64,128]),
+                    'cpu_count': cpu_cores,
+                    'memory_gb': memory_gb,
                     'disk_count': random.randint(1,4),
                     'nic_count': random.randint(1,4),
-                    'ip_addresses': f"{network_prefix}.{random.randint(1,254)}.{random.randint(1,254)}",
+                    'ip_addresses': ip_address,  # Add IP address
                     'power_state': random.choice(['poweredOn'] * 90 + ['poweredOff'] * 10),
                     'created_date': self.random_date(),
-                    'notes': f"{purpose} workload"
+                    'notes': f"VM for {purpose} workload"
                 }
                 self.vms.append(vm)
                 self.generate_vm_guest_details(vm)
                 vm_id += 1
 
-    def generate_vm_guest_details(self, vm: Dict):
+        # After generating all VMs, update cluster totals
+        for cluster in self.clusters:
+            cluster_vms = [vm for vm in self.vms if vm['cluster_moref'] == cluster['moref']]
+            cluster['total_vms'] = len(cluster_vms)
+
+    def generate_vm_guest_details(self, vm):
         guest_detail = {
             'vm_moref': vm['moref'],
             'guest_os_full': vm['guest_os'],
-            'ip_addresses': vm['ip_addresses'],
+            'ip_addresses': vm['ip_addresses'],  # Use the VM's IP address
             'hostname': vm['name'].lower(),
-            'uptime': random.uniform(1, 400),
-            'tools_status': 'Running Current',
+            'uptime': random.uniform(1, 400) if vm['power_state'] == 'poweredOn' else 0,
+            'tools_status': 'Running Current' if vm['power_state'] == 'poweredOn' else 'Not Running',
             'tools_version': '12365',
             'guest_state': 'Running' if vm['power_state'] == 'poweredOn' else 'Stopped',
-            'cpu_usage': random.randint(20, 80),
-            'memory_usage': random.randint(40, 90),
+            'cpu_usage': random.randint(20, 80) if vm['power_state'] == 'poweredOn' else 0,
+            'memory_usage': random.randint(40, 90) if vm['power_state'] == 'poweredOn' else 0,
             'notes': vm['notes']
         }
         self.vm_guest_details.append(guest_detail)
@@ -385,64 +515,32 @@ class VSphereEnvironmentGenerator:
                 }
                 self.datacenters.append(datacenter)
 
-def generate_vcenter_url(vcenter_name):
-    # Convert name to lowercase and remove spaces for hostname
-    hostname = vcenter_name.lower().replace(' ', '')
-    # Add realistic domain and format as proper vCenter URL
-    return f"https://{hostname}.vsphere.local"
+    def validate_config(self, config):
+        """Validate configuration values"""
+        # Validate weights sum to 1.0
+        for section in ['regions', 'virtual_machines.purposes']:
+            items = self.get_nested_dict_value(config, section)
+            weights = [item['weight'] for item in items.values()]
+            if not 0.99 <= sum(weights) <= 1.01:
+                raise ValueError(f"Weights in {section} must sum to 1.0")
+        
+        # Validate network prefixes are unique
+        network_prefixes = [r['network_prefix'] for r in config['regions'].values()]
+        if len(network_prefixes) != len(set(network_prefixes)):
+            raise ValueError("Network prefixes must be unique across regions")
 
-def generate_datacenters(num_datacenters, vcenter_ids):
-    datacenters = []
-    dc_names = [f"Datacenter-{i+1}" for i in range(num_datacenters)]
-    
-    for vcenter_id in vcenter_ids:
-        # Each vCenter gets 1-3 datacenters
-        num_dcs = random.randint(1, 3)
-        for i in range(num_dcs):
-            dc_id = str(uuid.uuid4())
-            name = f"DC-{random.choice(['PROD', 'DEV', 'TEST', 'DR'])}-{random.randint(1,99)}"
-            description = f"Virtual Datacenter for {name}"
-            datacenters.append([name, dc_id, vcenter_id, description])
-    
-    return datacenters
-
-def generate_vcenters(num_vcenters):
-    vcenters = []
-    versions = ['7.0.3', '8.0.0', '8.0.1']
-    builds = ['20150588', '20519528', '20802592']
-    
-    for i in range(num_vcenters):
-        vcenter_id = str(uuid.uuid4())
-        name = f"vcenter-{random.randint(1,999):03d}"
-        url = generate_vcenter_url(name)
-        version = random.choice(versions)
-        build = random.choice(builds)
-        vcenters.append([name, vcenter_id, url, version, build])
-    
-    return vcenters
-
-def generate_vsphere_data():
-    # ... existing code ...
-    
-    # Generate vCenters first
-    vcenters = generate_vcenters(num_vcenters)
-    vcenter_ids = [vc[1] for vc in vcenters]
-    
-    # Generate datacenters before other objects
-    datacenters = generate_datacenters(num_datacenters, vcenter_ids)
-    
-    # Write the new datacenter data
-    write_csv('vsphere-data/Datacenters.csv', 
-             ['Name', 'ID', 'vCenterID', 'Description'], 
-             datacenters)
-    
-    # Modify the vCenter CSV writing to match new structure
-    write_csv('vsphere-data/vCenters.csv',
-             ['Name', 'ID', 'URL', 'Version', 'Build'],
-             vcenters)
-    
-    # ... rest of your existing code ...
+    def get_nested_dict_value(self, d, path):
+        """Get value from nested dictionary using dot notation path"""
+        keys = path.split('.')
+        value = d
+        for key in keys:
+            value = value[key]
+        return value
 
 if __name__ == "__main__":
-    generator = VSphereEnvironmentGenerator()
-    generator.generate_all()
+    try:
+        generator = VSphereEnvironmentGenerator()
+        generator.generate_all()
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)

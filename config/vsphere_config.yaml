@@ -1,0 +1,135 @@
+# Environment Scale Configuration
+scale:
+  size: "large"  # Can be small, medium, large
+  
+  # Predefined sizes define the overall environment scale
+  size_definitions:
+    small:
+      total_vms: 1000
+      avg_vms_per_host: 20
+      max_hosts_per_cluster: 12
+    medium:
+      total_vms: 5000
+      avg_vms_per_host: 25
+      max_hosts_per_cluster: 24
+    large:
+      total_vms: 20000
+      avg_vms_per_host: 30
+      max_hosts_per_cluster: 32
+
+  # Distribution patterns for realistic variations
+  distributions:
+    cluster_sizes:
+      large_site:  # For HQ regions
+        tiny: {hosts: "4-8", weight: 0.1}    # Small dev/test clusters
+        small: {hosts: "8-16", weight: 0.3}   # Standard workload clusters
+        medium: {hosts: "16-24", weight: 0.4} # Main production clusters
+        large: {hosts: "24-32", weight: 0.2}  # Large production clusters
+      
+      remote_site:  # For regional offices
+        small: {hosts: "4-8", weight: 0.4}    # Standard clusters
+        medium: {hosts: "8-16", weight: 0.5}  # Main production
+        large: {hosts: "16-24", weight: 0.1}  # Larger workloads
+    
+    vm_density:  # VMs per host variations
+      low: {range: "15-20", weight: 0.2}    # Dev/Test hosts
+      normal: {range: "20-30", weight: 0.6}  # Standard production
+      high: {range: "30-40", weight: 0.2}    # High density hosts
+
+# Regional Configuration
+regions:
+  HQ-A:
+    weight: 0.3
+    network_prefix: "10.10"
+    datacenters: 2  # PROD and DR
+    cluster_distribution: "large_site"
+  HQ-B:
+    weight: 0.3
+    network_prefix: "10.20"
+    datacenters: 2
+    cluster_distribution: "large_site"
+  NA:
+    weight: 0.15
+    network_prefix: "10.30"
+    datacenters: 1
+    cluster_distribution: "remote_site"
+  EU:
+    weight: 0.15
+    network_prefix: "10.40"
+    datacenters: 1
+    cluster_distribution: "remote_site"
+  APAC:
+    weight: 0.1
+    network_prefix: "10.50"
+    datacenters: 1
+    cluster_distribution: "remote_site"
+
+# vCenter Configurations
+vcenter:
+  versions:
+    - version: "7.0.3"
+      build: "20150588"
+      weight: 0.5
+    - version: "8.0.0"
+      build: "20519528"
+      weight: 0.3
+    - version: "8.0.1"
+      build: "20802592"
+      weight: 0.2
+
+# Host Configurations
+hosts:
+  models:
+    - name: "PowerEdge R750"
+      weight: 0.6
+      cpu_cores: 48
+      memory_gb: 384
+    - name: "PowerEdge R840"
+      weight: 0.4
+      cpu_cores: 96
+      memory_gb: 768
+
+# Virtual Machine Configurations
+virtual_machines:
+  os_types:
+    - name: "Windows Server 2019 Standard"
+      weight: 0.4
+      typical_memory_gb: [8, 16, 32]
+      typical_cpu_cores: [2, 4, 8]
+    - name: "Windows Server 2022 Standard"
+      weight: 0.3
+      typical_memory_gb: [16, 32, 64]
+      typical_cpu_cores: [4, 8, 16]
+    - name: "RHEL 8.6"
+      weight: 0.15
+      typical_memory_gb: [4, 8, 16]
+      typical_cpu_cores: [2, 4, 8]
+    - name: "Ubuntu 20.04 LTS"
+      weight: 0.15
+      typical_memory_gb: [4, 8, 16]
+      typical_cpu_cores: [2, 4, 8]
+  
+  purposes:
+    - name: "WEB"
+      weight: 0.3
+    - name: "APP"
+      weight: 0.3
+    - name: "DB"
+      weight: 0.2
+    - name: "SVC"
+      weight: 0.1
+    - name: "MON"
+      weight: 0.05
+    - name: "INF"
+      weight: 0.05
+
+# Storage Configurations
+storage:
+  arrays:
+    - name: "PowerStore"
+      models: ["T1000", "T3000"]
+      weight: 0.6
+    - name: "Unity XT"
+      models: ["480", "880"]
+      weight: 0.4
+  datastore_sizes_gb: [2048, 4096, 8192, 16384] 
